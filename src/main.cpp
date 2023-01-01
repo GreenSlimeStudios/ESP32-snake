@@ -55,7 +55,7 @@ void de_render_part(int x, int y){
 struct Snake{
   Direction dir = Direction::RIGHT; 
   std::vector<Part> parts = {Part{x:0,y:0},Part{x:0,y:0},Part{x:0,y:0}};
-  bool isAlive = true;
+  bool is_alive = true;
 
   void render_snake(){
     // display.clearDisplay();
@@ -74,7 +74,7 @@ struct Snake{
   void check_collision(){
     for (int i=1;i<parts.size();++i){
       if (parts[0].x == parts[i].x && parts[0].y == parts[i].y){
-        isAlive = false;
+        is_alive = false;
       }
     }
   }
@@ -93,14 +93,21 @@ struct Snake{
   }
 
   void check_input(){
-    if (!digitalRead(pUP)) dir = Direction::UP;
-    if (!digitalRead(pDOWN)) dir = Direction::DOWN;
-    if (!digitalRead(pLEFT)) dir = Direction::LEFT;
-    if (!digitalRead(pRIGHT)) dir = Direction::RIGHT;
+    if (!digitalRead(pUP) && dir != Direction::DOWN) dir = Direction::UP;
+    if (!digitalRead(pDOWN) && dir != Direction::UP) dir = Direction::DOWN;
+    if (!digitalRead(pLEFT) && dir != Direction::RIGHT) dir = Direction::LEFT;
+    if (!digitalRead(pRIGHT) && dir != Direction::LEFT) dir = Direction::RIGHT;
   }
 
+  void await_restart(){
+    if (!digitalRead(pUP) || !digitalRead(pDOWN) || !digitalRead(pLEFT) || !digitalRead(pRIGHT)){
+      dir = Direction::RIGHT; 
+      parts = {Part{x:0,y:0},Part{x:0,y:0},Part{x:0,y:0}};
+      is_alive = true;
+      display.clearDisplay();
+    }
+  }
 };
-void end_game(){}
 
 int random(int min, int max) //range : [min, max]
 {
@@ -118,6 +125,24 @@ Berry berry = Berry(
   random(-64/8,64/8),
   random(-32/8,32/8)
 );
+
+void end_game(){
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0,10);
+  display.println(F("DEATH"));
+  display.setTextSize(2);
+  display.setTextColor(0,1);
+  display.print(F("score "));
+  display.println(snake.parts.size());
+  display.setTextSize(1);
+  display.setTextColor(1);
+  display.print(F("press any button to restart"));
+  display.display();
+  delay(2000);
+}
+
  
 void handle_berry(){
   for (int i=0;i<snake.parts.size();++i){
@@ -131,8 +156,8 @@ void handle_berry(){
     snake.parts.push_back(snake.parts[snake.parts.size()-1]);
     berry.x = random(-64/8,64/8); 
     berry.y = random(-32/8,32/8);
-    berry.render();
     berry.is_alive=true;
+    berry.render();
   }
 }
 
@@ -154,18 +179,23 @@ void setup() {
 
   snake.render_snake();
   delay(1000);
+  
+  berry.render();
 }
 
 void loop(){
-  if (snake.isAlive){
+  if (snake.is_alive){
     berry.render();
-    Serial.print(berry.x); Serial.print(" "); Serial.println(berry.y);
+    // Serial.print(berry.x); Serial.print(" "); Serial.println(berry.y);
     snake.check_input();
     snake.move();
     snake.render_snake();
     snake.check_collision();
-    if (snake.isAlive == false) end_game();
+    if (snake.is_alive == false) end_game();
     handle_berry();
     delay(100);   
+  }
+  else{
+    snake.await_restart();
   }
 }
