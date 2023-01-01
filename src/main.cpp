@@ -65,9 +65,9 @@ struct Snake{
     display.display();
   }
   void wrap_if_needed(){
-    if (parts[0].x > 128/8) parts[0].x = -128/8;
+    if (parts[0].x > 128/8 - 1) parts[0].x = -128/8;
     if (parts[0].x < -128/8) parts[0].x = 128/8;
-    if (parts[0].y > 64/8) parts[0].y = -64/8;
+    if (parts[0].y > 64/8 - 1) parts[0].y = -64/8;
     if (parts[0].y < -64/8) parts[0].y = 64/8;
   }
 
