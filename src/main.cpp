@@ -16,9 +16,6 @@ const int pDOWN = 4;
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 // The pins for I2C are defined by the Wire-library. 
-// On an arduino UNO:       A4(SDA), A5(SCL)
-// On an arduino MEGA 2560: 20(SDA), 21(SCL)
-// On an arduino LEONARDO:   2(SDA),  3(SCL), ...
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -57,7 +54,8 @@ void de_render_part(int x, int y){
 
 struct Snake{
   Direction dir = Direction::RIGHT; 
-  std::vector<Part> parts = {Part{x:0,y:0},Part{x:-1,y:0},Part{x:-2,y:0}};
+  std::vector<Part> parts = {Part{x:0,y:0},Part{x:0,y:0},Part{x:0,y:0}};
+  bool isAlive = true;
 
   void render_snake(){
     // display.clearDisplay();
@@ -73,13 +71,12 @@ struct Snake{
     if (parts[0].y < -64/8) parts[0].y = 64/8;
   }
 
-  bool check_collision(){
+  void check_collision(){
     for (int i=1;i<parts.size();++i){
       if (parts[0].x == parts[i].x && parts[0].y == parts[i].y){
-        return true;
+        isAlive = false;
       }
     }
-    return false;
   }
 
   void move(){
@@ -160,12 +157,15 @@ void setup() {
 }
 
 void loop(){
-  berry.render();
-  Serial.print(berry.x); Serial.print(" "); Serial.println(berry.y);
-  snake.check_input();
-  snake.move();
-  snake.render_snake();
-  if (snake.check_collision()) end_game();
-  handle_berry();
-  delay(100);   
+  if (snake.isAlive){
+    berry.render();
+    Serial.print(berry.x); Serial.print(" "); Serial.println(berry.y);
+    snake.check_input();
+    snake.move();
+    snake.render_snake();
+    snake.check_collision();
+    if (snake.isAlive == false) end_game();
+    handle_berry();
+    delay(100);   
+  }
 }
