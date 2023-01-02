@@ -107,6 +107,25 @@ struct Snake{
       display.clearDisplay();
     }
   }
+  void animate_death(){
+    for (int i=0;i<3;++i){
+      for (int y=0;y<parts.size();++y){
+        de_render_part(parts[y].x,parts[y].y);
+      }
+      display.display();
+      delay(100);
+      for (int y=0;y<parts.size();++y){
+        render_part(parts[y].x,parts[y].y);
+      }
+      display.display();
+      delay(100);
+    }
+    for (int i=parts.size()-1;i>=0;--i){
+      de_render_part(parts[i].x,parts[i].y);
+      display.display();
+      delay(20);
+    }
+  }
 };
 
 int random(int min, int max) //range : [min, max]
@@ -127,6 +146,7 @@ Berry berry = Berry(
 );
 
 void end_game(){
+  snake.animate_death();
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
